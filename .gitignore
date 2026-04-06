@@ -1,0 +1,19 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+response.json
+lambda/**/function.zip
+
+# Terraform variables (sensitive)
+*.tfvars
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Temp / backup files
+*.bkp
