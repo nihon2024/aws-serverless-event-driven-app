@@ -2,72 +2,79 @@ AWS Serverless Event-Driven Architecture (Terraform)
 
 ⸻
 
-🚀 Overview
+Overview
 
-This project provisions a production-style serverless, event-driven architecture on AWS using Terraform.
+This project demonstrates a production-style serverless, event-driven architecture on AWS using Terraform.
 
-It demonstrates how to build a scalable and decoupled system using modern AWS services such as API Gateway, Lambda, EventBridge, SQS, DynamoDB, and S3.
-
-The infrastructure is fully managed using Infrastructure as Code (Terraform) and version-controlled with Git/GitHub.
+It showcases how to build a scalable, decoupled system using core AWS services with proper failure handling, monitoring, and infrastructure as code.
 
 ⸻
 
-🧰 Tech Stack
-	•	AWS (API Gateway, Lambda, EventBridge, SQS, DynamoDB, S3, IAM, CloudWatch)
-	•	Terraform (Infrastructure as Code)
-	•	Git & GitHub (Version control)
-	•	VS Code (Development environment)
-	•	Terminal (zsh)
-
-⸻
-
-🏗️ Architecture
+Architecture
 
 Flow:
-	1.	Client sends request to API Gateway
-	2.	API Gateway triggers Lambda (Producer)
-	3.	Lambda publishes event to EventBridge
-	4.	EventBridge routes event to SQS queue
-	5.	Lambda (Consumer) processes messages from SQS
-	6.	Processed data is stored in DynamoDB
-	7.	Raw payloads / logs can be stored in S3
-	8.	Failed messages are sent to Dead Letter Queue (DLQ)
+	1.	Producer Lambda generates an event
+	2.	EventBridge routes the event
+	3.	Event is sent to SQS queue
+	4.	Consumer Lambda processes the message
+	5.	Data is stored in DynamoDB
+	6.	Failed messages are sent to a Dead Letter Queue (DLQ)
 
 ⸻
 
-📁 Project Structure
+Components
+	•	AWS Lambda (Producer)
+Simulates upstream events
+	•	Amazon EventBridge
+Routes events based on rules
+	•	Amazon SQS
+Buffers messages and enables decoupling
+	•	AWS Lambda (Consumer)
+Processes messages from SQS
+	•	Amazon DynamoDB
+Stores processed data
+	•	Dead Letter Queue (DLQ)
+Captures failed messages for analysis
+	•	Amazon CloudWatch
+Provides logs and monitoring with alarms
 
+⸻
+
+Key Features
+	•	Event-driven architecture
+	•	Asynchronous processing using SQS
+	•	Service decoupling via EventBridge and SQS
+	•	Failure handling using DLQ
+	•	Idempotent consumer using DynamoDB conditional writes
+	•	CloudWatch alarm for DLQ monitoring
+	•	Infrastructure as Code using Terraform
+
+⸻
+
+Project Structure
 aws-serverless-event-driven-app/
+│
 ├── infra/
-│   ├── backend.tf
 │   ├── provider.tf
-│   ├── api_gateway.tf
+│   ├── backend.tf
 │   ├── lambda.tf
 │   ├── eventbridge.tf
 │   ├── sqs.tf
 │   ├── dynamodb.tf
 │   ├── s3.tf
 │   ├── iam.tf
+│   ├── monitoring.tf
 │   ├── outputs.tf
 │   └── variables.tf
 │
 ├── lambda/
 │   ├── producer/
-│   │   └── app.py
 │   └── consumer/
 │       └── app.py
 │
 └── README.md
 
-Security Design
-	•	IAM roles with least privilege access
-	•	SQS decouples services to improve resilience
-	•	DLQ for failure handling
-	•	No direct service-to-service tight coupling
-
-⸻
-
-📦 Terraform Backend
+Terraform Backend
 
 Remote state is stored using:
 	•	S3 bucket (state storage)
@@ -75,38 +82,57 @@ Remote state is stored using:
 
 ⸻
 
-📊 Observability
-	•	AWS CloudWatch Logs for Lambda and API Gateway
-	•	Helps monitor execution and debug failures
+Observability
+	•	CloudWatch logs for Lambda functions
+	•	CloudWatch alarm triggers when DLQ contains messages
 
 ⸻
 
-⚙️ Deployment Steps
+Deployment
+
 terraform init
 terraform plan
 terraform apply
 
-Key Concepts Demonstrated
+Trigger event:
+
+aws lambda invoke \
+  --function-name aws-serverless-event-driven-producer \
+  --payload '{}' \
+  --cli-binary-format raw-in-base64-out \
+  response.json
+
+  Key Concepts Demonstrated
 	•	Event-driven architecture
 	•	Asynchronous processing (SQS)
-	•	Service decoupling (EventBridge)
-	•	Failure handling (DLQ)
+	•	Service decoupling
+	•	Failure handling with DLQ
+	•	Idempotent processing
 	•	Infrastructure as Code (Terraform)
 
 ⸻
 
-📌 Notes
-	•	Default region: us-east-1
-	•	Database is DynamoDB (serverless)
+Notes
 	•	No Docker used (pure serverless implementation)
+	•	Default region: us-east-1
 
 ⸻
 
-🚀 Future Improvements
+Future Improvements
 	•	Add CI/CD pipeline (GitHub Actions)
-	•	Add API authentication (Cognito)
+	•	Add API authentication (Amazon Cognito)
 	•	Add monitoring dashboards (CloudWatch)
 	•	Use Terraform modules for reusability
 
-    Author
-    Nitesh Kumar 
+⸻
+
+Trade-offs
+	•	SQS chosen over direct Lambda invocation for better decoupling and reliability
+	•	EventBridge enables flexible routing but adds slight latency
+	•	At-least-once delivery from SQS requires idempotent consumer design
+
+⸻
+
+Author
+
+Nitesh Kumar
